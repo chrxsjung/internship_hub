@@ -158,6 +158,7 @@ export default function NewIdea() {
           <h2 className="text-xl font-bold mb-2">Generated Project Idea</h2>
           <div className="prose">
             <pre className="whitespace-pre-wrap">{result}</pre>
+            {/* todo: result is json. parse it and display it better */}
           </div>
         </div>
       )}
