@@ -43,7 +43,7 @@ export default function NewIdea() {
       //what to do with this json
       //send this to another page?
 
-    setResult(result.choices[0].message.content);
+      setResult(result.choices[0].message.content);
     } catch (error) {
       console.error("Error generating project idea:", error?.message);
     }

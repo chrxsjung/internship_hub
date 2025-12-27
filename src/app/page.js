@@ -29,6 +29,12 @@ export default function Home() {
           title="Company Specific Interview Qs"
           description="Company specific interview questions to help you prepare effectively. Idk if this is possible but we ball "
         />
+
+        <ToolCardComingSoon
+          link="ideas/new"
+          title="Cover Letter Generator"
+          description="Generate a bomb cover letter to build upon based on your resume and the job description."
+        />
       </div>
 
       <div className="mt-16 text-center text-green-300 text-3xl">
