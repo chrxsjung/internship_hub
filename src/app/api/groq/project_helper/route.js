@@ -1,5 +1,21 @@
     import { NextResponse } from "next/server";
 
+
+
+    //todo: Make sure my users arent bitches and make input suepr large. 
+    //so limit input size to like 300 chars for additrional, etc. 
+    // later do something about spamming. maybe users can only do 3 a day. unless they zelle me money lol 
+
+
+
+
+
+
+
+
+
+
+
     export async function POST(request) {
     const input = await request.json();
 
