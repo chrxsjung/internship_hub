@@ -43,7 +43,9 @@ export default function NewIdea() {
       //what to do with this json
       //send this to another page?
 
-      setResult(result.choices[0].message.content);
+      const contentString = result.choices[0].message.content;
+      const parsedContent = JSON.parse(contentString);
+      setResult(parsedContent);
     } catch (error) {
       console.error("Error generating project idea:", error?.message);
     }
@@ -150,15 +152,80 @@ export default function NewIdea() {
           Generate Idea
         </button>
       </form>
-      {result && (
-        <div
-          ref={resultRef}
-          className="mt-10 w-full max-w-md p-4 border rounded"
-        >
-          <h2 className="text-xl font-bold mb-2">Generated Project Idea</h2>
-          <div className="prose">
-            <pre className="whitespace-pre-wrap">{result}</pre>
-            {/* todo: result is json. parse it and display it better */}
+
+      <div className="mt-8 mb-24">
+        <h2 className="text-xl w-lg text-center text-red-600 border">
+          PSA:
+          <br /> some people told me the roadmap isn&apos;t &quot;detailed&quot;
+          enough. i think its a good structure. running into issues and thinking
+          through and looking at google is part of learning.
+          <br />i need to take my own advice here lmaoo
+        </h2>
+      </div>
+
+      {result && result.projects && result.projects[0] && (
+        <div className="flex flex-col justify-center  items-center w-full">
+          <div
+            ref={resultRef}
+            className="mt-10 w-full max-w-2xl p-6 border rounded-lg shadow-lg bg-white"
+          >
+            <h2 className="text-3xl font-bold mb-4 text-blue-600">
+              {result.projects[0].title}
+            </h2>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2 text-black">
+                Description
+              </h3>
+              <p className="text-gray-700">{result.projects[0].description}</p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2 text-black">
+                Tech Stack
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {result.projects[0].tech_stack.map((tech, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="text-black text-xl">
+                Now that you have an actionable idea, go ahead and start coding!{" "}
+              </h3>
+              <h3 className="text-lg font-semibold mb-3 text-black mt-4">
+                Roadmap ({result.projects[0].roadmap.weeks} weeks)
+              </h3>
+              {/* go through each week group then go through goals in each week group and format it to list items */}
+              <div className="space-y-4">
+                {result.projects[0].roadmap.milestones.map(
+                  (weekGroup, index) => (
+                    <div
+                      key={index}
+                      className="border-l-4 border-blue-500 pl-4"
+                    >
+                      <h4 className="font-semibold text-gray-800 mb-2">
+                        {weekGroup.label}
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {weekGroup.goals.map((bulletPt, bulletIndex) => (
+                          <li key={bulletIndex} className="text-gray-600">
+                            {bulletPt}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
