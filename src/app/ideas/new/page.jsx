@@ -31,7 +31,7 @@ export default function NewIdea() {
       const data = Object.fromEntries(formData.entries());
 
       //turn this into json then send to my api route then send to real groq
-      const res = await fetch("/api/groq/project_helper", {
+      const res = await fetch("/api/groq/project-helper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -158,7 +158,7 @@ export default function NewIdea() {
           PSA:
           <br /> some people told me the roadmap isn&apos;t &quot;detailed&quot;
           enough. i think its a good structure. running into issues and thinking
-          through and looking at google is part of learning.
+          through while looking at google is a critical part of learning.
           <br />i need to take my own advice here lmaoo
         </h2>
       </div>

@@ -24,16 +24,15 @@ export default function Home() {
           title="Project Ideas Generator"
           description="Generate new project ideas to enhance your portfolio. Filters like languages, niche, time commitment, are available!"
         />
+        <ToolCard
+          link="/cover-letter"
+          title="Cover Letter Generator"
+          description="Generate a bomb cover letter to build upon based on your resume and the job description."
+        />
         <ToolCardComingSoon
           link="ideas/new"
           title="Company Specific Interview Qs"
           description="Company specific interview questions to help you prepare effectively. Idk if this is possible but we ball "
-        />
-
-        <ToolCardComingSoon
-          link="ideas/new"
-          title="Cover Letter Generator"
-          description="Generate a bomb cover letter to build upon based on your resume and the job description."
         />
       </div>
 
