@@ -46,7 +46,7 @@ export default function CoverLetter() {
       const parsedContent = JSON.parse(contentString);
       setResult(parsedContent);
     } catch (error) {
-      console.error("Error generating project idea:", error?.message);
+      console.error("Error generating cover letter:", error?.message);
     }
   };
 
