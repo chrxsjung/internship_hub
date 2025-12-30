@@ -1,3 +1,3 @@
 i would only deploy this when i figure out rate limiting and input santization
 
-so far the issues im running across is just finding out best ways to do certain tasks, like how to let users upload pdfs, turning that into text using Buffer, etc. 
+gna spend some time researching methods on how to limit users, like a 3 per day system then locking them. just finding out the best way to go about it like making an auth system in the future. 
