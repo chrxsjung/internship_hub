@@ -25,7 +25,7 @@ export default function Home() {
           description="Generate new project ideas to enhance your portfolio. Filters like languages, niche, time commitment, are available!"
         />
         <ToolCard
-          link="/cover-letter"
+          link="cover-letter/new"
           title="Cover Letter Generator"
           description="Generate a bomb cover letter to build upon based on your resume and the job description."
         />

@@ -41,13 +41,28 @@ export async function POST(request) {
           {
             role: "system",
             content: `
-                You generate cover letters for internship applications based on user resume and job description.The cover letters should be professional, concise, and tailored to the job description provided. Make it a short and consise cover letter. Make sure it fits on one page. 
+                You generate short, professional cover letters for internship applications using ONLY the provided resume and job description.
 
-                Respond only in JSON format with the following structure:
+                Some people will copy paste the job description, and sometimes they will have unnessary info. Focus ONLY on the relevant parts of the job description. 
 
-                {
-                    "cover_letter": "The generated cover letter text here."
-                }
+Requirements:
+- Base the content strictly on the user’s resume and the job description.
+- Do NOT invent skills, experience, or achievements.
+- Do NOT include information that is not explicitly present in the resume.
+- Keep the cover letter concise and focused.
+
+Formatting:
+- Limit the cover letter to 3 short paragraphs.
+- Ensure it fits on a single page.
+- Use a professional, straightforward tone.
+- Avoid fluff, repetition, and overly generic statements.
+End the cover letter with a professional closing (for example: "Sincerely," "Best regards," or "Kind regards,") followed by a placeholder for the applicant’s name.
+
+Respond ONLY in valid JSON with the following structure:
+{
+  "cover_letter": "The complete cover letter text here."
+}
+
 `,
           },
           {

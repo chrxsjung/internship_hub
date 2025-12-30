@@ -53,7 +53,6 @@ export default function CoverLetter() {
   return (
     <main className="min-h-screen p-6 flex flex-col items-center justify-start pt-40">
       <HomeButton />
-      <ViewProjectFormExample />
 
       <h1 className="text-5xl font-bold text-center">Cover Letter Generator</h1>
       <p className="mt-4 text-xl text-center">
