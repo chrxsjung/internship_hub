@@ -32,7 +32,7 @@ export default function CoverLetter() {
       //turn this into json then send to my api route then send to real groq
       const res = await fetch("/api/groq/cover-letter", {
         method: "POST",
-        //browser knows multipart and also since files juist do formdata 
+        //browser knows multipart and also since files juist do formdata
         body: formData,
       });
 
@@ -76,13 +76,12 @@ export default function CoverLetter() {
             name="resume"
             accept="application/pdf"
             onChange={(e) => setUploaded(!!e.target.files?.length)}
-
             className="mt-2 p-2 border border-gray-300 rounded"
           />
         </label>
 
-         <label className="flex flex-col">
-          Job Description 
+        <label className="flex flex-col">
+          Job Description
           <textarea
             required
             name="jobDescription"

@@ -153,6 +153,11 @@ export default function NewIdea() {
         </button>
       </form>
 
+
+    {/*     instead of this, maybe do something like "more detailed roadmap" then resend api call and make it a "pro plan" or some shit idk (research more about that) 
+    or just fix it by allowing to press more detailed ONCE and then button gets gray. do this using usestate
+
+    I think rather than "pro planm" for now just rate limit to 3 ideas per day, then 3 detailed per day as well. do this by rate limiting 
       <div className="mt-8 mb-24">
         <h2 className="text-xl w-lg text-center text-red-600 border">
           PSA:
@@ -162,6 +167,8 @@ export default function NewIdea() {
           <br />i need to take my own advice here lmaoo
         </h2>
       </div>
+      */}
+
 
       {result && result.projects && result.projects[0] && (
         <div className="flex flex-col justify-center  items-center w-full">
