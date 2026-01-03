@@ -158,7 +158,7 @@ export default function NewIdea() {
     or just fix it by allowing to press more detailed ONCE and then button gets gray. do this using usestate
 
     I think rather than "pro planm" for now just rate limit to 3 ideas per day, then 3 detailed per day as well. do this by rate limiting 
-      <div className="mt-8 mb-24">
+      <div className="mt-8 mb-24">  
         <h2 className="text-xl w-lg text-center text-red-600 border">
           PSA:
           <br /> some people told me the roadmap isn&apos;t &quot;detailed&quot;

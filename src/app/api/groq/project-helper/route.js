@@ -7,6 +7,14 @@ import { NextResponse } from "next/server";
 //so limit input size to like 300 chars for additrional, etc.
 // later do something about spamming. maybe users can only do 3 a day. unless they zelle me money lol
 
+
+
+
+
+//sanitize here once and paste it everywhere. 
+
+//lets sanitize first then rate limit since rate limiting is harder i think 
+
 export async function POST(request) {
 const input = await request.json();
 
