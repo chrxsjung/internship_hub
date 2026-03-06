@@ -1,0 +1,151 @@
+import { NextResponse } from "next/server";
+import { consumeToolRequest } from "@/lib/toolAccess";
+import { z } from "zod";
+
+function sanitizeInput(input) {
+  if (typeof input !== "string") {
+    return input;
+  }
+
+  return input
+    .trim()
+    .replace(/[<>]/g, "")
+    .replace(/["'`]/g, "")
+    .replace(/[{}[\]]/g, "")
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+\s*=/gi, "");
+}
+
+const projectIdeaSchema = z
+  .object({
+    experienceLevel: z.string().trim().min(1).max(100),
+    languages: z.string().trim().min(1).max(100),
+    AOI: z.string().trim().min(1).max(100),
+    scope: z.string().trim().min(1).max(100),
+    timeCommitment: z.string().trim().min(1).max(100),
+    budget: z.string().trim().min(1).max(100),
+    additionalInfo: z.string().trim().min(1).max(400),
+  })
+  .strict();
+
+export async function POST(request) {
+  const accessResult = await consumeToolRequest(request, "project-helper");
+
+  if (accessResult.errorResponse) {
+    return accessResult.errorResponse;
+  }
+
+  const rawInput = await request.json();
+  const parsedInput = projectIdeaSchema.safeParse(rawInput);
+
+  if (!parsedInput.success) {
+    return NextResponse.json(
+      { error: "Please submit valid text values for all required fields." },
+      { status: 400 },
+    );
+  }
+
+  const input = {};
+  for (const [key, value] of Object.entries(parsedInput.data)) {
+    input[key] = sanitizeInput(value);
+  }
+
+  const groqResponse = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        temperature: 1,
+        max_completion_tokens: 8192,
+        top_p: 1,
+        reasoning_effort: "medium",
+        stop: null,
+
+        messages: [
+          {
+            role: "system",
+            content: `
+                You generate side project ideas for Computer Science students building their portfolios for SWE internships.
+
+                Requirements:
+                - Output EXACTLY 1 unique project idea
+                - You MUST base the idea STRICTLY on the user's preferences
+                - Do NOT introduce domains, technologies, or topics outside the user's preferences
+                - The project must be suitable as a SOLO internship project
+
+                Output rules:
+                - Return ONLY valid JSON
+                - Do NOT include markdown, comments, explanations, or extra text
+                - Do NOT wrap the output in code fences
+                - The JSON MUST strictly match the schema below
+
+                For the project, return the following structured fields:
+                - id: short, unique, kebab-case string
+                - title: string
+                - description: string (2–3 sentences)
+                - tech_stack: array of strings
+                - roadmap:
+                - weeks: number (based on the user's preferred project length)
+                - milestones: array of objects, each with:
+                    - label: string (e.g., "Week 1", "Weeks 3–4")
+                    - goals: array of strings
+
+                Schema (example shape; values are illustrative):
+                {
+                "projects": [
+                    {
+                    "id": "example-project-id",
+                    "title": "Example Project Title",
+                    "description": "A short 2–3 sentence description of the project.",
+                    "tech_stack": ["Next.js", "PostgreSQL", "Tailwind CSS"],
+                    "roadmap": {
+                        "weeks": 4,
+                        "milestones": [
+                        {
+                            "label": "Week 1",
+                            "goals": ["Set up project", "Define schema"]
+                        }
+                        ]
+                    }
+                    }
+                ]
+                }
+
+                Return exactly ONE project inside the projects array.
+
+
+                        `,
+          },
+          {
+            role: "user",
+            content: `User preferences (JSON): ${JSON.stringify(input)}`,
+          },
+        ],
+      }),
+    }
+  );
+
+  const data = await groqResponse.json();
+
+  if (!groqResponse.ok) {
+    console.error("groq project-helper error", groqResponse.status, data);
+    return NextResponse.json(
+      { error: "The project ideas service is unavailable right now. Please try again." },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json({
+    ...data,
+    meta: {
+      rateLimit: accessResult.usage,
+    },
+  });
+}
+
+//i want it to be about fitness and logging my workouts. i wanna be able to add my friends and compete
