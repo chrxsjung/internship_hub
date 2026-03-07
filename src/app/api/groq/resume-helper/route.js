@@ -4,6 +4,7 @@ import { consumeToolRequest } from "@/lib/toolAccess";
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request) {
+  try {
   const accessResult = await consumeToolRequest(request, "resume-helper");
 
   if (accessResult.errorResponse) {
@@ -52,9 +53,11 @@ export async function POST(request) {
     );
   }
 
-  const groqResponse = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
+  let groqResponse;
+  try {
+    groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
@@ -110,10 +113,26 @@ ${safeResumeText}
           },
         ],
       }),
-    }
-  );
+      },
+    );
+  } catch (err) {
+    console.error("groq resume-helper fetch failed", err);
+    return NextResponse.json(
+      { error: "Could not reach the resume service. Check GROQ_API_KEY." },
+      { status: 502 },
+    );
+  }
 
-  const data = await groqResponse.json();
+  let data;
+  try {
+    data = await groqResponse.json();
+  } catch {
+    console.error("groq resume-helper: invalid json response");
+    return NextResponse.json(
+      { error: "The resume service returned an invalid response. Try again." },
+      { status: 502 },
+    );
+  }
 
   if (!groqResponse.ok) {
     console.error("groq resume-helper error", groqResponse.status, data);
@@ -129,6 +148,13 @@ ${safeResumeText}
       rateLimit: accessResult.usage,
     },
   });
+  } catch (err) {
+    console.error("resume-helper uncaught error:", err);
+    return NextResponse.json(
+      { error: "An error occurred. Check server logs. Ensure GROQ_API_KEY, Supabase env vars, and migrations (increment_daily_tool_usage) are set." },
+      { status: 500 },
+    );
+  }
 }
 
 //i want it to be about fitness and logging my workouts. i wanna be able to add my friends and compete

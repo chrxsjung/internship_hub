@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import HomeButton from "@/components/HomeButton";
 import RequireAuth from "@/components/RequireAuth";
-import { fetchWithAuth } from "@/lib/authFetch";
+import { fetchWithAuth, parseJsonResponse } from "@/lib/authFetch";
 
 //do i check for html Santiation or should i make forms dropdown or whadafuck
 
@@ -38,7 +38,7 @@ export default function ResumeOptimization() {
         body: formData,
       });
 
-      const payload = await res.json();
+      const payload = await parseJsonResponse(res);
 
       if (!res.ok) {
         const err = payload?.error;

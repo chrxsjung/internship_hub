@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import HomeButton from "@/components/HomeButton";
 import ViewProjectFormExample from "@/components/ViewProjectFormExample";
 import RequireAuth from "@/components/RequireAuth";
-import { fetchWithAuth } from "@/lib/authFetch";
+import { fetchWithAuth, parseJsonResponse } from "@/lib/authFetch";
 
 //do i check for html Santiation or should i make forms dropdown or whadafuck
 
@@ -40,7 +40,7 @@ export default function NewIdea() {
         body: JSON.stringify(data),
       });
 
-      const payload = await res.json();
+      const payload = await parseJsonResponse(res);
 
       if (!res.ok) {
         const err = payload?.error;

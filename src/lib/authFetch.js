@@ -24,3 +24,18 @@ export async function fetchWithAuth(input, init = {}) {
     headers,
   });
 }
+
+// safe json parse for responses; empty or invalid body causes clear error instead of "Unexpected end of JSON input"
+export async function parseJsonResponse(res) {
+  const text = await res.text();
+  if (!text || !text.trim()) {
+    throw new Error(
+      `Server returned an empty response (${res.status}). Ensure GROQ_API_KEY and Supabase env vars are set, and Supabase migrations are run.`,
+    );
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Server returned invalid JSON (${res.status}): ${text.slice(0, 80)}...`);
+  }
+}

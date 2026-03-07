@@ -29,13 +29,22 @@ const projectIdeaSchema = z
   .strict();
 
 export async function POST(request) {
+  try {
   const accessResult = await consumeToolRequest(request, "project-helper");
 
   if (accessResult.errorResponse) {
     return accessResult.errorResponse;
   }
 
-  const rawInput = await request.json();
+  let rawInput;
+  try {
+    rawInput = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON in request body." },
+      { status: 400 },
+    );
+  }
   const parsedInput = projectIdeaSchema.safeParse(rawInput);
 
   if (!parsedInput.success) {
@@ -50,9 +59,11 @@ export async function POST(request) {
     input[key] = sanitizeInput(value);
   }
 
-  const groqResponse = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
+  let groqResponse;
+  try {
+    groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
@@ -127,10 +138,26 @@ export async function POST(request) {
           },
         ],
       }),
-    }
-  );
+      },
+    );
+  } catch (err) {
+    console.error("groq project-helper fetch failed", err);
+    return NextResponse.json(
+      { error: "Could not reach the project ideas service. Check GROQ_API_KEY." },
+      { status: 502 },
+    );
+  }
 
-  const data = await groqResponse.json();
+  let data;
+  try {
+    data = await groqResponse.json();
+  } catch {
+    console.error("groq project-helper: invalid json response");
+    return NextResponse.json(
+      { error: "The project ideas service returned an invalid response. Try again." },
+      { status: 502 },
+    );
+  }
 
   if (!groqResponse.ok) {
     console.error("groq project-helper error", groqResponse.status, data);
@@ -146,6 +173,13 @@ export async function POST(request) {
       rateLimit: accessResult.usage,
     },
   });
+  } catch (err) {
+    console.error("project-helper uncaught error:", err);
+    return NextResponse.json(
+      { error: "An error occurred. Check server logs. Ensure GROQ_API_KEY, Supabase env vars, and migrations (increment_daily_tool_usage) are set." },
+      { status: 500 },
+    );
+  }
 }
 
 //i want it to be about fitness and logging my workouts. i wanna be able to add my friends and compete

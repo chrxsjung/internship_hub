@@ -64,16 +64,40 @@ export async function requireVerifiedUser(request) {
 }
 
 export async function consumeToolRequest(request, tool) {
-  const authResult = await requireVerifiedUser(request);
+  let authResult;
+  try {
+    authResult = await requireVerifiedUser(request);
+  } catch (err) {
+    console.error("requireVerifiedUser failed", err);
+    return {
+      errorResponse: NextResponse.json(
+        { error: "Auth failed. Check Supabase env vars (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)." },
+        { status: 500 },
+      ),
+    };
+  }
 
   if (authResult.errorResponse) {
     return authResult;
   }
 
-  const { supabase } = authResult;
-  const { data, error } = await supabase.rpc("increment_daily_tool_usage", {
-    p_tool: tool,
-  });
+  const { supabase, user } = authResult;
+  let data, error;
+  try {
+    const result = await supabase.rpc("increment_daily_tool_usage", {
+      p_tool: tool,
+    });
+    data = result.data;
+    error = result.error;
+  } catch (err) {
+    console.error("supabase rpc increment_daily_tool_usage failed", err);
+    return {
+      errorResponse: NextResponse.json(
+        { error: "Could not verify usage limit. Run Supabase migrations (increment_daily_tool_usage RPC)." },
+        { status: 500 },
+      ),
+    };
+  }
 
   if (error) {
     console.error("tool usage rpc failed", error);
