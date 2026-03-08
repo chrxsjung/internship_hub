@@ -5,8 +5,6 @@ import HomeButton from "@/components/HomeButton";
 import RequireAuth from "@/components/RequireAuth";
 import { fetchWithAuth, parseJsonResponse } from "@/lib/authFetch";
 
-//do i check for html Santiation or should i make forms dropdown or whadafuck
-
 export default function ResumeOptimization() {
   const [result, setResult] = useState(null);
   const resultRef = useRef(null);
@@ -52,14 +50,13 @@ export default function ResumeOptimization() {
         );
       }
 
-      const contentString = payload?.choices?.[0]?.message?.content;
-      if (!contentString) {
+      if (payload?.result) {
+        setResult(payload.result);
+      } else {
         const err = payload?.error;
         const msg = typeof err === "string" ? err : err?.message ?? "Unexpected response from the server.";
         throw new Error(msg);
       }
-      const parsedContent = JSON.parse(contentString);
-      setResult(parsedContent);
     } catch (error) {
       const msg = error?.message;
       setErrorMessage(

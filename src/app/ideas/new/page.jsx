@@ -6,12 +6,19 @@ import ViewProjectFormExample from "@/components/ViewProjectFormExample";
 import RequireAuth from "@/components/RequireAuth";
 import { fetchWithAuth, parseJsonResponse } from "@/lib/authFetch";
 
-//do i check for html Santiation or should i make forms dropdown or whadafuck
-
 export default function NewIdea() {
   const [result, setResult] = useState(null);
   const resultRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [lengths, setLengths] = useState({
+    experienceLevel: 0,
+    languages: 0,
+    AOI: 0,
+    scope: 0,
+    timeCommitment: 0,
+    budget: 0,
+    additionalInfo: 0,
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [usageMessage, setUsageMessage] = useState("");
 
@@ -54,14 +61,13 @@ export default function NewIdea() {
         );
       }
 
-      const contentString = payload?.choices?.[0]?.message?.content;
-      if (!contentString) {
+      if (payload?.result) {
+        setResult(payload.result);
+      } else {
         const err = payload?.error;
         const msg = typeof err === "string" ? err : err?.message ?? "Unexpected response from the server.";
         throw new Error(msg);
       }
-      const parsedContent = JSON.parse(contentString);
-      setResult(parsedContent);
     } catch (error) {
       const msg = error?.message;
       setErrorMessage(
@@ -94,80 +100,101 @@ export default function NewIdea() {
           id="newIdeaForm"
           className="mt-8 flex flex-col gap-4 w-full max-w-md"
         >
-          <label className="flex flex-col">
-            Experience Level
+          <label className="flex flex-col relative">
+            <span className="font-medium">Experience Level <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="experienceLevel"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, experienceLevel: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., How much experience do you have?"
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.experienceLevel, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Preferred Language(s):
+          <label className="flex flex-col relative">
+            <span className="font-medium">Preferred Language(s) <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="languages"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, languages: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., JavaScript, Python, etc."
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.languages, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Area of Interest:
+          <label className="flex flex-col relative">
+            <span className="font-medium">Area of Interest <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="AOI"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, AOI: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., Full Stack, AI/ML, Mobile, etc."
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.AOI, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Size/Scope of Project:
+          <label className="flex flex-col relative">
+            <span className="font-medium">Size/Scope of Project <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="scope"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, scope: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., Small, Medium, Large."
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.scope, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Time Commitment
+          <label className="flex flex-col relative">
+            <span className="font-medium">Time Commitment <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="timeCommitment"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, timeCommitment: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., How long do you have for this project."
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.timeCommitment, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Budget
+          <label className="flex flex-col relative">
+            <span className="font-medium">Budget <span className="text-slate-400 font-normal">(max 100 chars)</span></span>
             <input
               required
               type="text"
               name="budget"
-              className="mt-2 p-2 border border-gray-300 rounded"
+              maxLength={100}
+              onInput={(e) => setLengths((p) => ({ ...p, budget: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded pr-12"
               placeholder="e.g., What is your budget for APIs, hosting, etc.?"
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.budget, 100)}/100</span>
           </label>
 
-          <label className="flex flex-col">
-            Additional Info (Be specific!):
+          <label className="flex flex-col relative">
+            <span className="font-medium">Additional Info (Be specific!) <span className="text-slate-400 font-normal">(max 400 chars)</span></span>
             <textarea
               required
               name="additionalInfo"
-              className="mt-2 p-2 border border-gray-300 rounded h-36 resize-none"
+              maxLength={400}
+              onInput={(e) => setLengths((p) => ({ ...p, additionalInfo: e.target.value.length }))}
+              className="mt-2 p-2 border border-gray-300 rounded h-36 resize-none pr-12"
               placeholder="e.g., Just yap about what you want to accomplish in this project. What do you want to learn? What hobbies and passions do you have that would motivate you to finish this project?"
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">{Math.min(lengths.additionalInfo, 400)}/400</span>
           </label>
 
           {errorMessage && (
@@ -193,24 +220,9 @@ export default function NewIdea() {
         </form>
 
 
-    {/*     instead of this, maybe do something like "more detailed roadmap" then resend api call and make it a "pro plan" or some shit idk (research more about that) 
-    or just fix it by allowing to press more detailed ONCE and then button gets gray. do this using usestate
 
-    I think rather than "pro planm" for now just rate limit to 3 ideas per day, then 3 detailed per day as well. do this by rate limiting 
-      <div className="mt-8 mb-24">  
-        <h2 className="text-xl w-lg text-center text-red-600 border">
-          PSA:
-          <br /> some people told me the roadmap isn&apos;t &quot;detailed&quot;
-          enough. i think its a good structure. running into issues and thinking
-          through while looking at google is a critical part of learning.
-          <br />i need to take my own advice here lmaoo
-        </h2>
-      </div>
-      */}
-
-
-        {result && result.projects && result.projects[0] && (
-          <div className="flex flex-col justify-center  items-center w-full">
+        {result?.projects?.[0] && (
+          <div className="flex flex-col justify-center items-center w-full">
             <div
               ref={resultRef}
               className="mt-10 w-full max-w-2xl p-6 border rounded-lg shadow-lg bg-white"
@@ -226,51 +238,59 @@ export default function NewIdea() {
                 <p className="text-gray-700">{result.projects[0].description}</p>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2 text-black">
-                  Tech Stack
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {result.projects[0].tech_stack.map((tech, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-black text-xl">
-                  Now that you have an actionable idea, go ahead and start coding!
-                </h3>
-                <h3 className="text-lg font-semibold mb-3 text-black mt-4">
-                  Roadmap ({result.projects[0].roadmap.weeks} weeks)
-                </h3>
-                <div className="space-y-4">
-                  {result.projects[0].roadmap.milestones.map(
-                    (weekGroup, index) => (
-                      <div
+              {result.projects[0].tech_stack?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2 text-black">
+                    Tech Stack
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {result.projects[0].tech_stack.map((tech, index) => (
+                      <span
                         key={index}
-                        className="border-l-4 border-blue-500 pl-4"
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                       >
-                        <h4 className="font-semibold text-gray-800 mb-2">
-                          {weekGroup.label}
-                        </h4>
-                        <ul className="list-disc list-inside space-y-1">
-                          {weekGroup.goals.map((bulletPt, bulletIndex) => (
-                            <li key={bulletIndex} className="text-gray-600">
-                              {bulletPt}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ),
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.projects[0].roadmap && (
+                <div className="mb-4">
+                  <h3 className="text-black text-xl">
+                    Now that you have an actionable idea, go ahead and start coding!
+                  </h3>
+                  <h3 className="text-lg font-semibold mb-3 text-black mt-4">
+                    Roadmap ({result.projects[0].roadmap.weeks} weeks)
+                  </h3>
+                  {result.projects[0].roadmap.milestones?.length > 0 && (
+                    <div className="space-y-4">
+                      {result.projects[0].roadmap.milestones.map(
+                        (weekGroup, index) => (
+                          <div
+                            key={index}
+                            className="border-l-4 border-blue-500 pl-4"
+                          >
+                            <h4 className="font-semibold text-gray-800 mb-2">
+                              {weekGroup.label}
+                            </h4>
+                            {weekGroup.goals?.length > 0 && (
+                              <ul className="list-disc list-inside space-y-1">
+                                {weekGroup.goals.map((bulletPt, bulletIndex) => (
+                                  <li key={bulletIndex} className="text-gray-600">
+                                    {bulletPt}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ),
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}

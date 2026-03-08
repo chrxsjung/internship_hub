@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { consumeToolRequest } from "@/lib/toolAccess";
+import { consumeToolRequest, recordToolUsage } from "@/lib/toolAccess";
 
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
-const MAX_JOB_DESCRIPTION_CHARS = 4000;
+const MAX_JOB_DESCRIPTION_CHARS = 3999;
+const PDF_MAGIC = Buffer.from([0x25, 0x50, 0x44, 0x46]); // %PDF
 
 function sanitizeInput(input) {
   if (typeof input !== "string") {
@@ -30,6 +31,11 @@ export async function POST(request) {
 
   let jobDescriptions = formData.get("jobDescription");
 
+  // formdata sends textarea newlines as \r\n; normalize to \n
+  if (typeof jobDescriptions === "string") {
+    jobDescriptions = jobDescriptions.replace(/\r\n/g, "\n");
+  }
+
   if (typeof jobDescriptions !== "string" || !jobDescriptions.trim()) {
     return NextResponse.json(
       { error: "Please paste a job description." },
@@ -39,7 +45,7 @@ export async function POST(request) {
 
   if (jobDescriptions.length > MAX_JOB_DESCRIPTION_CHARS) {
     return NextResponse.json(
-      { error: "Job description must be 4000 characters or less." },
+      { error: "Job description must be 3999 characters or less." },
       { status: 400 },
     );
   }
@@ -54,13 +60,6 @@ export async function POST(request) {
     );
   }
 
-  if (!resume.type.toLowerCase().includes("pdf")) {
-    return NextResponse.json(
-      { error: "Only PDF resumes are supported." },
-      { status: 400 },
-    );
-  }
-
   if (resume.size > MAX_PDF_BYTES) {
     return NextResponse.json(
       { error: "Resume PDF must be 5MB or smaller." },
@@ -68,9 +67,6 @@ export async function POST(request) {
     );
   }
 
-  //so make resume file binary cojntents into a buffer to send to parse pdf then that turns into text
-
-  //make resume into arraybuffer Buffer built in node js then i would Buffer from arraybuffer and sand that to pdf-parse
   const pdf = require("pdf-parse/lib/pdf-parse");
 
   let safeResumeText = "";
@@ -78,8 +74,14 @@ export async function POST(request) {
   try {
     const arrayBuffer = await resume.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    if (!buffer.subarray(0, 4).equals(PDF_MAGIC)) {
+      return NextResponse.json(
+        { error: "Invalid PDF file." },
+        { status: 400 },
+      );
+    }
     const parsed = await pdf(buffer);
-    safeResumeText = parsed.text.slice(0, 40_000);
+    safeResumeText = sanitizeInput(parsed.text.slice(0, 40_000));
   } catch (error) {
     console.error("cover letter pdf parse failed", error);
     return NextResponse.json(
@@ -99,12 +101,11 @@ export async function POST(request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        temperature: 1,
-        max_completion_tokens: 8192,
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        response_format: { type: "json_object" },
+        temperature: 0.8, // Slight variety for creative hooks
+        max_completion_tokens: 2048,
         top_p: 1,
-        reasoning_effort: "medium",
-        stop: null,
 
         messages: [
           {
@@ -151,7 +152,7 @@ ${safeResumeText}
   } catch (err) {
     console.error("groq cover-letter fetch failed", err);
     return NextResponse.json(
-      { error: "Could not reach the cover letter service. Check GROQ_API_KEY." },
+      { error: "Could not reach the cover letter service. Please try again." },
       { status: 502 },
     );
   }
@@ -175,19 +176,37 @@ ${safeResumeText}
     );
   }
 
+  const contentString = data?.choices?.[0]?.message?.content;
+  if (!contentString) {
+    return NextResponse.json(
+      { error: "The cover letter service returned an empty result. Try again." },
+      { status: 502 },
+    );
+  }
+
+  let result;
+  try {
+    result = JSON.parse(contentString);
+  } catch {
+    return NextResponse.json(
+      { error: "The cover letter service returned malformed output. Try again." },
+      { status: 502 },
+    );
+  }
+
+  const newUsage = await recordToolUsage(request, "cover-letter");
+
   return NextResponse.json({
-    ...data,
+    result,
     meta: {
-      rateLimit: accessResult.usage,
+      rateLimit: newUsage ?? accessResult.usage,
     },
   });
   } catch (err) {
     console.error("cover-letter uncaught error:", err);
     return NextResponse.json(
-      { error: "An error occurred. Check server logs. Ensure GROQ_API_KEY, Supabase env vars, and migrations (increment_daily_tool_usage) are set." },
+      { error: "An unexpected error occurred. Please try again later." },
       { status: 500 },
     );
   }
 }
-
-//i want it to be about fitness and logging my workouts. i wanna be able to add my friends and compete

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { consumeToolRequest } from "@/lib/toolAccess";
+import { consumeToolRequest, recordToolUsage } from "@/lib/toolAccess";
 import { z } from "zod";
 
 function sanitizeInput(input) {
@@ -70,12 +70,11 @@ export async function POST(request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
-        temperature: 1,
+        model: "qwen/qwen3-32b",
+        response_format: { type: "json_object" },
+        temperature: 0.9, // Higher for creative/unique project ideas
         max_completion_tokens: 8192,
-        top_p: 1,
-        reasoning_effort: "medium",
-        stop: null,
+        top_p: 0.95,
 
         messages: [
           {
@@ -143,7 +142,7 @@ export async function POST(request) {
   } catch (err) {
     console.error("groq project-helper fetch failed", err);
     return NextResponse.json(
-      { error: "Could not reach the project ideas service. Check GROQ_API_KEY." },
+      { error: "Could not reach the project ideas service. Please try again." },
       { status: 502 },
     );
   }
@@ -167,19 +166,37 @@ export async function POST(request) {
     );
   }
 
+  const contentString = data?.choices?.[0]?.message?.content;
+  if (!contentString) {
+    return NextResponse.json(
+      { error: "The project ideas service returned an empty result. Try again." },
+      { status: 502 },
+    );
+  }
+
+  let result;
+  try {
+    result = JSON.parse(contentString);
+  } catch {
+    return NextResponse.json(
+      { error: "The project ideas service returned malformed output. Try again." },
+      { status: 502 },
+    );
+  }
+
+  const newUsage = await recordToolUsage(request, "project-helper");
+
   return NextResponse.json({
-    ...data,
+    result,
     meta: {
-      rateLimit: accessResult.usage,
+      rateLimit: newUsage ?? accessResult.usage,
     },
   });
   } catch (err) {
     console.error("project-helper uncaught error:", err);
     return NextResponse.json(
-      { error: "An error occurred. Check server logs. Ensure GROQ_API_KEY, Supabase env vars, and migrations (increment_daily_tool_usage) are set." },
+      { error: "An unexpected error occurred. Please try again later." },
       { status: 500 },
     );
   }
 }
-
-//i want it to be about fitness and logging my workouts. i wanna be able to add my friends and compete

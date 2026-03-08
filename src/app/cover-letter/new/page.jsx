@@ -5,13 +5,12 @@ import HomeButton from "@/components/HomeButton";
 import RequireAuth from "@/components/RequireAuth";
 import { fetchWithAuth, parseJsonResponse } from "@/lib/authFetch";
 
-//do i check for html Santiation or should i make forms dropdown or whadafuck
-
 export default function CoverLetter() {
   const [result, setResult] = useState(null);
   const resultRef = useRef(null);
   const [uploaded, setUploaded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [jobDescLength, setJobDescLength] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [usageMessage, setUsageMessage] = useState("");
   useEffect(() => {
@@ -51,14 +50,13 @@ export default function CoverLetter() {
         );
       }
 
-      const contentString = payload?.choices?.[0]?.message?.content;
-      if (!contentString) {
+      if (payload?.result) {
+        setResult(payload.result);
+      } else {
         const err = payload?.error;
         const msg = typeof err === "string" ? err : err?.message ?? "Unexpected response from the server.";
         throw new Error(msg);
       }
-      const parsedContent = JSON.parse(contentString);
-      setResult(parsedContent);
     } catch (error) {
       const msg = error?.message;
       setErrorMessage(
@@ -103,14 +101,19 @@ export default function CoverLetter() {
             />
           </label>
 
-          <label className="flex flex-col">
-            Job Description
+          <label className="flex flex-col relative">
+            <span className="font-medium">Job Description <span className="text-slate-400 font-normal">(max 3,999 chars)</span></span>
             <textarea
               required
               name="jobDescription"
-              className="mt-2 p-2 border border-gray-300 rounded h-36 resize-none"
+              maxLength={3999}
+              onInput={(e) => setJobDescLength(e.target.value.length)}
+              className="mt-2 p-2 border border-gray-300 rounded h-36 resize-none pr-12"
               placeholder="Paste job description here!"
             />
+            <span className="absolute bottom-2 right-3 text-xs text-slate-500">
+              {Math.min(jobDescLength, 3999)}/3999
+            </span>
           </label>
 
           {errorMessage && (

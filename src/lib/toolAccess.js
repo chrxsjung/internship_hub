@@ -63,6 +63,7 @@ export async function requireVerifiedUser(request) {
   return { supabase, user };
 }
 
+// check limit without incrementing (call at start of request)
 export async function consumeToolRequest(request, tool) {
   let authResult;
   try {
@@ -71,7 +72,7 @@ export async function consumeToolRequest(request, tool) {
     console.error("requireVerifiedUser failed", err);
     return {
       errorResponse: NextResponse.json(
-        { error: "Auth failed. Check Supabase env vars (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)." },
+        { error: "Authentication service is unavailable. Please try again later." },
         { status: 500 },
       ),
     };
@@ -84,16 +85,16 @@ export async function consumeToolRequest(request, tool) {
   const { supabase, user } = authResult;
   let data, error;
   try {
-    const result = await supabase.rpc("increment_daily_tool_usage", {
+    const result = await supabase.rpc("check_daily_tool_limit", {
       p_tool: tool,
     });
     data = result.data;
     error = result.error;
   } catch (err) {
-    console.error("supabase rpc increment_daily_tool_usage failed", err);
+    console.error("check_daily_tool_limit failed", err);
     return {
       errorResponse: NextResponse.json(
-        { error: "Could not verify usage limit. Run Supabase migrations (increment_daily_tool_usage RPC)." },
+        { error: "Could not verify your usage limit. Please try again later." },
         { status: 500 },
       ),
     };
@@ -126,4 +127,27 @@ export async function consumeToolRequest(request, tool) {
   }
 
   return { supabase, user, usage };
+}
+
+// increment usage only on success (call right before returning successful response). returns new usage for meta.
+export async function recordToolUsage(request, tool) {
+  const authHeader = request.headers.get("authorization") || "";
+  const accessToken = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+  if (!accessToken || !supabaseUrl || !supabaseAnonKey) return null;
+
+  const supabase = createAuthedClient(accessToken);
+  try {
+    const { data, error } = await supabase.rpc("increment_daily_tool_usage", {
+      p_tool: tool,
+    });
+    if (!error && data) {
+      return Array.isArray(data) ? data[0] : data;
+    }
+    return null;
+  } catch (err) {
+    console.error("recordToolUsage failed", err);
+    return null;
+  }
 }

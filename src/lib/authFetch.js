@@ -30,12 +30,12 @@ export async function parseJsonResponse(res) {
   const text = await res.text();
   if (!text || !text.trim()) {
     throw new Error(
-      `Server returned an empty response (${res.status}). Ensure GROQ_API_KEY and Supabase env vars are set, and Supabase migrations are run.`,
+      `Server returned an empty response (${res.status}). Please try again later.`,
     );
   }
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`Server returned invalid JSON (${res.status}): ${text.slice(0, 80)}...`);
+    throw new Error(`Server returned invalid JSON (${res.status}). Please try again.`);
   }
 }
